@@ -52,6 +52,27 @@ RETURN node.equipmentnumber as text, score, node{.*, embedding: Null, start_date
 """
 )
 
+
+generic_neo4j_vector = Neo4jVector.from_existing_graph(
+    embedding=embeddings,                              # (1)
+    url=st.secrets["NEO4J_URI"],             # (2)
+    username=st.secrets["NEO4J_USERNAME"],   # (3)
+    password=st.secrets["NEO4J_PASSWORD"],   # (4)
+    index_name="equipmentindex",                 # (5)
+    node_label="Equipment",                      # (6)
+    text_node_properties= ["equipmentnumber"],# (7)
+    embedding_node_property="embedding", # (8)
+    retrieval_query="""
+MATCH (node:Equipment)-[:HAS_DOCUMENT]->(d:Document)
+OPTIONAL MATCH (node)-[:HAS_MAINTENANCE_PROCEDURE]->(m:MaintenanceProcedure)
+OPTIONAL MATCH (node)-[:HAS_MAINTENANCE_SCHEDULE]->(s:MaintenanceSchedule)
+RETURN node.equipmentnumber as text,
+       score,
+       node{.*, embedding: Null, start_date: s.start_date,end_date:s.end_date,maintenance_steps:m.steps,
+       documentnumber:d.documentnumber,documenturl:d.documenturl} as metadata
+"""
+)
+
 retriever = neo4jvector.as_retriever()
 maintenance_retriever = maintenance_vector.as_retriever()
 kg_qa = RetrievalQA.from_chain_type(
@@ -59,5 +80,4 @@ kg_qa = RetrievalQA.from_chain_type(
     chain_type="stuff",   # (2)
     retriever=retriever,  # (3)
 )
-
 

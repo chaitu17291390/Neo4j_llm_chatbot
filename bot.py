@@ -20,16 +20,8 @@ if "messages" not in st.session_state:
 def handle_submit(message):
     # Handle the response
     with st.spinner('Thinking...'):
-
         response = generate_response(message)
-        if("=" in response):
-            print("in iff")
-            write_message('assistant',str(response))
-            #write_message('assistant', response.split("=")[1].replace("'","").
-            #              replace("response_metadata",""))
-        else:
-            print("in else")
-            write_message('assistant', response)
+        write_message('assistant', response)
 # end::submit[]
 
 
